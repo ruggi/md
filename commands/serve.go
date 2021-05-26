@@ -1,0 +1,101 @@
+package commands
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"time"
+
+	"github.com/radovskyb/watcher"
+	"github.com/ruggi/md/engine"
+	"github.com/ruggi/md/settings"
+)
+
+type ServeArgs struct {
+	Directory string
+	Host      string
+	Port      int
+	Watch     bool
+}
+
+func Serve(args ServeArgs, engine engine.Engine) error {
+	mdPath := filepath.Join(args.Directory, settings.MDDir)
+	outPath := filepath.Join(mdPath, settings.OutDir)
+
+	err := Build(BuildArgs{Directory: args.Directory}, engine)
+	if err != nil {
+		return err
+	}
+
+	if args.Watch {
+		log.Println("watching for changes")
+
+		w := watcher.New()
+		defer w.Close()
+
+		w.FilterOps(watcher.Rename, watcher.Move, watcher.Create, watcher.Write, watcher.Remove)
+		err = w.Add(filepath.Join(mdPath, "layout.html"))
+		if err != nil {
+			return err
+		}
+		err = w.Ignore(mdPath)
+		if err != nil {
+			return err
+		}
+		err = w.AddRecursive(args.Directory)
+		if err != nil {
+			return err
+		}
+
+		go func() {
+			for {
+				select {
+				case event := <-w.Event:
+					log.Println(event.Op, event.Path)
+					err := Build(BuildArgs{Directory: args.Directory}, engine)
+					if err != nil {
+						log.Fatalf("cannot build: %s", err)
+					}
+				case err := <-w.Error:
+					log.Fatalln(err)
+				case <-w.Closed:
+					return
+				}
+			}
+		}()
+
+		go func() {
+			if err := w.Start(time.Millisecond * 100); err != nil {
+				log.Fatal(err)
+			}
+		}()
+	}
+
+	s := &http.Server{
+		Addr:    fmt.Sprintf("%s:%d", args.Host, args.Port),
+		Handler: http.FileServer(http.Dir(outPath)),
+	}
+
+	log.Printf("listening on http://%s", s.Addr)
+	go s.ListenAndServe()
+
+	sigCh := make(chan os.Signal)
+	signal.Notify(sigCh, os.Interrupt)
+	sig := <-sigCh
+
+	log.Printf("got signal %s, terminating...", sig)
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+
+	err = s.Shutdown(shutdownCtx)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
