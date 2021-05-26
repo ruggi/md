@@ -9,6 +9,5 @@ var (
 	SourceFileExtensions = map[string]bool{
 		".md":       true,
 		".markdown": true,
-		".txt":      true,
 	}
 )
