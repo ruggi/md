@@ -12,6 +12,7 @@ import (
 
 	"github.com/radovskyb/watcher"
 	"github.com/ruggi/md/engine"
+	"github.com/ruggi/md/files"
 	"github.com/ruggi/md/settings"
 )
 
@@ -23,10 +24,18 @@ type ServeArgs struct {
 }
 
 func Serve(args ServeArgs, engine engine.Engine) error {
-	mdPath := filepath.Join(args.Directory, settings.MDDir)
-	outPath := filepath.Join(mdPath, settings.OutDir)
+	mdDir, err := files.EnsureMDDir(args.Directory)
+	if err != nil {
+		return err
+	}
 
-	err := Build(BuildArgs{Directory: args.Directory}, engine)
+	outPath := filepath.Join(mdDir, settings.OutDir)
+
+	builder, err := NewBuild(BuildArgs{Directory: args.Directory}, engine)
+	if err != nil {
+		return err
+	}
+	err = builder()
 	if err != nil {
 		return err
 	}
@@ -38,11 +47,15 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 		defer w.Close()
 
 		w.FilterOps(watcher.Rename, watcher.Move, watcher.Create, watcher.Write, watcher.Remove)
-		err = w.Add(filepath.Join(mdPath, "layout.html"))
+		err = w.Add(filepath.Join(mdDir, "layout.html"))
 		if err != nil {
 			return err
 		}
-		err = w.Ignore(mdPath)
+		err = w.Add(filepath.Join(mdDir, "layout.html"))
+		if err != nil {
+			return err
+		}
+		err = w.Ignore(mdDir)
 		if err != nil {
 			return err
 		}
@@ -56,7 +69,7 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 				select {
 				case event := <-w.Event:
 					log.Println(event.Op, event.Path)
-					err := Build(BuildArgs{Directory: args.Directory}, engine)
+					err := builder()
 					if err != nil {
 						log.Fatalf("cannot build: %s", err)
 					}

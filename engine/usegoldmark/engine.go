@@ -9,7 +9,9 @@ import (
 	highlighting "github.com/yuin/goldmark-highlighting"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/util"
 )
 
 type Engine struct {
@@ -17,7 +19,6 @@ type Engine struct {
 }
 
 type EngineConf struct {
-	HighlightStyle string
 }
 
 func NewEngine(conf EngineConf) *Engine {
@@ -25,12 +26,6 @@ func NewEngine(conf EngineConf) *Engine {
 		goldmark: goldmark.New(
 			goldmark.WithExtensions(
 				extension.GFM,
-				highlighting.NewHighlighting(
-					highlighting.WithStyle(conf.HighlightStyle),
-					highlighting.WithFormatOptions(
-						chromahtml.WithLineNumbers(true),
-					),
-				),
 			),
 			goldmark.WithParserOptions(
 				parser.WithAutoHeadingID(),
@@ -50,4 +45,20 @@ func (e *Engine) Convert(r io.Reader, w io.Writer) error {
 		return err
 	}
 	return e.goldmark.Convert(data, w)
+}
+
+func (e *Engine) SetSyntaxHighlight(enabled bool, style string) {
+	if !enabled {
+		return
+	}
+	e.goldmark.Renderer().AddOptions(
+		renderer.WithNodeRenderers(
+			util.Prioritized(highlighting.NewHTMLRenderer(
+				highlighting.WithStyle(style),
+				highlighting.WithFormatOptions(
+					chromahtml.WithLineNumbers(true),
+				),
+			), 200),
+		),
+	)
 }

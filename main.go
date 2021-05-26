@@ -10,9 +10,8 @@ import (
 )
 
 var conf struct {
-	directory      string
-	highlightStyle string
-	serve          struct {
+	directory string
+	serve     struct {
 		host  string
 		port  int
 		watch bool
@@ -26,12 +25,6 @@ func main() {
 			Name:        "d,directory",
 			Value:       ".",
 			Destination: &conf.directory,
-			Required:    true,
-		},
-		cli.StringFlag{
-			Name:        "highlight",
-			Value:       "solarized-light",
-			Destination: &conf.highlightStyle,
 		},
 	}
 	app.Commands = []cli.Command{
@@ -46,14 +39,16 @@ func main() {
 		{
 			Name: "build",
 			Action: func(*cli.Context) error {
-				return commands.Build(
+				build, err := commands.NewBuild(
 					commands.BuildArgs{
 						Directory: conf.directory,
 					},
-					usegoldmark.NewEngine(usegoldmark.EngineConf{
-						HighlightStyle: conf.highlightStyle,
-					}),
+					usegoldmark.NewEngine(usegoldmark.EngineConf{}),
 				)
+				if err != nil {
+					return err
+				}
+				return build()
 			},
 		},
 		{
@@ -82,9 +77,7 @@ func main() {
 						Port:      conf.serve.port,
 						Watch:     conf.serve.watch,
 					},
-					usegoldmark.NewEngine(usegoldmark.EngineConf{
-						HighlightStyle: conf.highlightStyle,
-					}),
+					usegoldmark.NewEngine(usegoldmark.EngineConf{}),
 				)
 			},
 		},

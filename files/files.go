@@ -2,7 +2,11 @@ package files
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
+
+	"github.com/pkg/errors"
+	"github.com/ruggi/md/settings"
 )
 
 func ListToMap(files []string) map[string][]string {
@@ -22,4 +26,19 @@ func ListToMap(files []string) map[string][]string {
 		}
 	}
 	return result
+}
+
+func EnsureMDDir(dir string) (string, error) {
+	mdDir := filepath.Join(dir, settings.MDDir)
+	stat, err := os.Stat(mdDir)
+	if os.IsNotExist(err) {
+		return "", errors.Errorf("%s does not exist, please use the 'init' command to set it up", mdDir)
+	}
+	if err != nil {
+		return "", err
+	}
+	if !stat.IsDir() {
+		return "", errors.Errorf("%s exists but is not a directory", mdDir)
+	}
+	return mdDir, nil
 }
