@@ -31,8 +31,9 @@ This is a sample page.
 
 var defaultConfig = types.Config{
 	SyntaxHighlight: types.SyntaxHighlightConfig{
-		Enabled: true,
-		Style:   "solarized-light",
+		Enabled:     true,
+		Style:       "solarized-light",
+		LineNumbers: true,
 	},
 }
 

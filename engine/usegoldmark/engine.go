@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	chromahtml "github.com/alecthomas/chroma/formatters/html"
+	"github.com/ruggi/md/types"
 	"github.com/yuin/goldmark"
 	highlighting "github.com/yuin/goldmark-highlighting"
 	"github.com/yuin/goldmark/extension"
@@ -47,16 +48,16 @@ func (e *Engine) Convert(r io.Reader, w io.Writer) error {
 	return e.goldmark.Convert(data, w)
 }
 
-func (e *Engine) SetSyntaxHighlight(enabled bool, style string) {
-	if !enabled {
+func (e *Engine) SetSyntaxHighlight(conf types.SyntaxHighlightConfig) {
+	if !conf.Enabled {
 		return
 	}
 	e.goldmark.Renderer().AddOptions(
 		renderer.WithNodeRenderers(
 			util.Prioritized(highlighting.NewHTMLRenderer(
-				highlighting.WithStyle(style),
+				highlighting.WithStyle(conf.Style),
 				highlighting.WithFormatOptions(
-					chromahtml.WithLineNumbers(true),
+					chromahtml.WithLineNumbers(conf.LineNumbers),
 				),
 			), 200),
 		),

@@ -231,6 +231,7 @@ Configuration variables are set in the `.md/config.json` file.
     SyntaxHighlighting: {
         Enabled: boolean // enable or disable syntax highlighting for fenced code blocks
         Style: string // the visual style of the syntax highlithing blocks.
+        LineNumbers: boolean // show line numbers
     }
 }
 ```

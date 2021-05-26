@@ -52,7 +52,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot read config file")
 	}
-	engine.SetSyntaxHighlight(conf.SyntaxHighlight.Enabled, conf.SyntaxHighlight.Style)
+	engine.SetSyntaxHighlight(conf.SyntaxHighlight)
 
 	return func() error {
 		log.Printf("Building %s", args.Directory)
@@ -196,7 +196,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 				return err
 			}
 
-			title := pages[path].Title
+			page := pages[path]
 
 			fileTpl, err := template.New("file").Parse(string(src))
 			if err != nil {
@@ -205,7 +205,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 
 			var buf bytes.Buffer
 			err = fileTpl.Execute(&buf, types.FileData{
-				Title: title,
+				Page:  page,
 				Pages: pagesMap,
 			})
 			if err != nil {
@@ -225,7 +225,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 			defer dst.Close()
 
 			err = layoutTpl.Execute(dst, types.Layout{
-				Title:   title,
+				Page:    page,
 				Content: contentBuf.String(),
 			})
 			if err != nil {

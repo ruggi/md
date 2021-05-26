@@ -5,6 +5,7 @@ type Config struct {
 }
 
 type SyntaxHighlightConfig struct {
-	Enabled bool
-	Style   string
+	Enabled     bool
+	Style       string
+	LineNumbers bool
 }

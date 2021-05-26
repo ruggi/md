@@ -1,7 +1,7 @@
 package types
 
 type Layout struct {
-	Title   string
+	Page
 	Content string
 }
 
@@ -11,6 +11,6 @@ type Page struct {
 }
 
 type FileData struct {
-	Title string
+	Page
 	Pages map[string][]Page
 }
