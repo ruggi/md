@@ -74,6 +74,10 @@ func Init(args InitArgs) error {
 		if err != nil {
 			return err
 		}
+		err = ioutil.WriteFile(filepath.Join(mdDir, ".gitignore"), []byte(settings.OutDir), 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	configFile := filepath.Join(mdDir, "config.json")
