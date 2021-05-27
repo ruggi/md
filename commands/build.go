@@ -75,7 +75,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 			if d.IsDir() {
 				return nil
 			}
-			if strings.HasPrefix(path, mdDir) || strings.HasPrefix(path, ".git") {
+			if strings.HasPrefix(path, mdDir) || strings.HasPrefix(path, filepath.Join(args.Directory, ".git")) {
 				return nil
 			}
 			if !settings.SourceFileExtensions[filepath.Ext(path)] {
@@ -88,10 +88,10 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 					}
 					defer src.Close()
 
-					fld := filepath.Join(outDir, strings.TrimSuffix(path, filepath.Base(path)))
-					err = os.MkdirAll(fld, os.ModePerm)
+					dir := filepath.Join(outDir, strings.TrimPrefix(strings.TrimSuffix(path, filepath.Base(path)), args.Directory))
+					err = os.MkdirAll(dir, os.ModePerm)
 					if err != nil {
-						return errors.Wrapf(err, "cannot make folders for %s", fld)
+						return errors.Wrapf(err, "cannot make folders for %s", path)
 					}
 
 					dstPath := filepath.Join(outDir, strings.TrimPrefix(path, args.Directory))
