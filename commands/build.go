@@ -75,7 +75,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 			if d.IsDir() {
 				return nil
 			}
-			if strings.HasPrefix(path, ".") {
+			if strings.HasPrefix(path, mdDir) || strings.HasPrefix(path, ".git") {
 				return nil
 			}
 			if !settings.SourceFileExtensions[filepath.Ext(path)] {
