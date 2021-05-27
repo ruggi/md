@@ -10,6 +10,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -119,7 +120,17 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 		pages := map[string]types.Page{}
 		for _, p := range paths {
 			defaultTitle := strings.TrimSuffix(filepath.Base(p), filepath.Ext(p))
-			title := defaultTitle
+			page := types.Page{
+				Title: defaultTitle,
+				Path:  p,
+			}
+
+			base := filepath.Base(p)
+			date, ok := files.TryParseDate(base)
+			if ok {
+				page.Date = date
+			}
+
 			f, err := os.Open(p)
 			if err != nil {
 				return err
@@ -129,22 +140,20 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 			if scanner.Scan() {
 				firstLine := scanner.Text()
 				if strings.HasPrefix(firstLine, "# ") {
-					title = strings.TrimPrefix(firstLine, "# ")
-				} else if strings.HasPrefix(firstLine, "<!--page ") {
+					page.Title = strings.TrimPrefix(firstLine, "# ")
+				} else if strings.HasPrefix(firstLine, "<!-- ") {
 					var meta types.Page
-					err := json.Unmarshal([]byte(strings.TrimSuffix(strings.TrimPrefix(firstLine, "<!--page "), " -->")), &meta)
+					err := json.Unmarshal([]byte(strings.TrimSuffix(strings.TrimPrefix(firstLine, "<!-- "), " -->")), &meta)
 					if err != nil {
-						return err
+						log.Printf("warning: cannot parse page meta for %s", p)
 					}
-					title = meta.Title
+					page.Title = meta.Title
+					page.Date = meta.Date
 				}
 			}
 			_ = f.Close()
 
-			pages[p] = types.Page{
-				Title: title,
-				Path:  p,
-			}
+			pages[p] = page
 		}
 		pathsWithoutDir := make([]string, 0, len(paths))
 		for _, p := range paths {
@@ -198,7 +207,10 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 
 			page := pages[path]
 
-			fileTpl, err := template.New("file").Parse(string(src))
+			fileTpl, err := template.New("file").Funcs(template.FuncMap{
+				"reverse": reverse,
+				"byDate":  byDate,
+			}).Parse(string(src))
 			if err != nil {
 				return err
 			}
@@ -237,4 +249,21 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 
 		return nil
 	}, nil
+}
+
+func reverse(pages []types.Page, things ...interface{}) []types.Page {
+	res := make([]types.Page, len(pages))
+	for i := range pages {
+		res[len(pages)-i-1] = pages[i]
+	}
+	return res
+}
+
+func byDate(pages []types.Page, things ...interface{}) []types.Page {
+	res := make(types.PagesByDate, 0, len(pages))
+	for _, p := range pages {
+		res = append(res, p)
+	}
+	sort.Sort(res)
+	return res
 }
