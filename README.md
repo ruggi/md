@@ -7,6 +7,7 @@
     - [Live server](#live-server)
   - [Templating](#templating)
     - [Pages](#pages)
+    - [Functions](#functions)
   - [Configuration](#configuration)
     - [SyntaxHighlighting](#syntaxhighlighting)
     - [Custom page attributes](#custom-page-attributes)
@@ -219,7 +220,24 @@ This is my website.
     <li><a href="{{ $page.Path }}">{{ $page.Title }}</a></li>
 {{ end }}
 </ul>
+```
 
+### Functions
+
+* `reverse` : inverts the order of a slice of pages
+* `byDate` : sorts a slice of pages by date
+
+Example:
+
+```md
+<ul>
+    {{ range $index, $page := reverse ( byDate .Pages.posts ) }}
+    <li>
+        {{ $page.Date.Format "2006 01 02" }}
+        <a href="{{ $page.Path }}">{{ $page.Path }}</a>
+    </li>
+    {{ end }}
+</ul>
 ```
 
 ## Configuration
@@ -244,8 +262,8 @@ You can use any of the [styles available here](https://github.com/alecthomas/chr
 
 As written above, page titles are automatically generated from either the first line of the file, if it's a heading, or the file name.
 
-In addition, you can pass a custom file name by setting the file's first line to a HTML comment like this:
+In addition, you can pass custom page attributes by setting the file's first line to a HTML comment like this:
 
-```
-<!--page {"Title": "my-custom-title"} -->
+```md
+<!-- {"Title": "my-custom-title", "Date": ""} -->
 ```
