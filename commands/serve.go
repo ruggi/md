@@ -94,9 +94,14 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 	}
 
 	log.Printf("listening on http://%s", s.Addr)
-	go s.ListenAndServe()
+	go func() {
+		err := s.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("cannot start server: %s", err)
+		}
+	}()
 
-	sigCh := make(chan os.Signal)
+	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	sig := <-sigCh
 
