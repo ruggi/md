@@ -46,7 +46,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 
 	runHooks := func(hooks []string) error {
 		for i, h := range hooks {
-			log.Printf("%d/%d running before hook %q", i+1, len(conf.Hooks.Build.Before), h)
+			log.Printf("%d/%d running hook %q", i+1, len(conf.Hooks.Build.Before), h)
 			parts := strings.Fields(h)
 			cmd := exec.Command(parts[0], parts[1:]...)
 			cmd.Stdout = os.Stdout
