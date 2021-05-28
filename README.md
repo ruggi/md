@@ -185,22 +185,22 @@ For example, the following structure:
 
 will be represented in the `.Pages` variable as:
 
-```json
+```plain
 {
     "_": [                 // <- the root level
         {Title: "About", Path: "about.html"},
         {Title: "Index", Path: "index.html"},
         {Title: "Hello", Path: "posts/2020/1-hello.html"},
         {Title: "Syntax", Path: "posts/2020/2-syntax.html"},
-        ...
+        // ...
     ],
     "posts": [
         {Title: "Hello", Path: "posts/2020/1-hello.html"},
-        ...
+        // ...
     ],
     "projects": [
         {Title: "Foo", Path: "projects/foo.html"},
-        ...
+        // ...
     ]
 }
 ```
