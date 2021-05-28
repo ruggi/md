@@ -65,6 +65,10 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 			return err
 		}
 
+		err = w.Ignore(".git")
+		if err != nil {
+			return err
+		}
 		err = w.Ignore(mdDir)
 		if err != nil {
 			return err
