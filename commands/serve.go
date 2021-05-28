@@ -53,25 +53,23 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 		w := watcher.New()
 		defer w.Close()
 
-		w.FilterOps(watcher.Rename, watcher.Move, watcher.Create, watcher.Write, watcher.Remove)
-		err = w.Add(filepath.Join(mdDir, "layout.html"))
-		if err != nil {
-			return err
-		}
-		err = w.Add(filepath.Join(mdDir, "layout.html"))
-		if err != nil {
-			return err
-		}
-		err = w.Ignore(mdDir)
-		if err != nil {
-			return err
-		}
 		for _, f := range conf.NoWatch {
 			err = w.Ignore(f)
 			if err != nil {
 				return err
 			}
 		}
+
+		err = w.Add(filepath.Join(mdDir, "layout.html"))
+		if err != nil {
+			return err
+		}
+
+		err = w.Ignore(mdDir)
+		if err != nil {
+			return err
+		}
+
 		err = w.AddRecursive(args.Directory)
 		if err != nil {
 			return err
