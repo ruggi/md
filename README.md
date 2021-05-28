@@ -258,6 +258,7 @@ Configuration variables are set in the `.md/config.json` file.
         Style: string // the visual style of the syntax highlithing blocks.
         LineNumbers: boolean // show line numbers
     }
+    Ignore: []string // list of files to ignore and not process (or copy)
 }
 ```
 
