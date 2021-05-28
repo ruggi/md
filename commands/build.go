@@ -69,6 +69,11 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 		// get source files
 		paths := []string{}
 		err = filepath.WalkDir(args.Directory, func(path string, d fs.DirEntry, err error) error {
+			for _, s := range conf.Ignore {
+				if s == path {
+					return nil
+				}
+			}
 			if err != nil {
 				return err
 			}
