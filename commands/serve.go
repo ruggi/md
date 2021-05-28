@@ -65,7 +65,7 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 			return err
 		}
 
-		err = w.Ignore(".git")
+		err = w.Ignore(filepath.Join(args.Directory, ".git"))
 		if err != nil {
 			return err
 		}
