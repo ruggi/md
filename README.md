@@ -6,6 +6,7 @@
     - [Building](#building)
     - [Live server](#live-server)
   - [Templating](#templating)
+    - [Dates](#dates)
     - [Pages](#pages)
     - [Functions](#functions)
   - [Configuration](#configuration)
@@ -153,16 +154,22 @@ In your template, you can reference three variables:
 
 * `.Content` is the HTML contents of the page, converted from its markdown source.
 * `.Title` is the title of the page, being either the first line of the file, if it's a H1 heading (starting with a single `#`) or the file name (without extension).
+* `.Date` is the date of the page, as parsed from the filename.
 * `.Pages` which is a map referencing all the generated pages.
 
 You can also use the `.Title` and `.Pages` variables in your markdown files!
+
+### Dates
+
+Dates are parsed from the file name: you can either use the Unix timestamp in seconds, followed by a dash, or the `YYYY-MM-DD` syntax, followed by a dash. The `{{.Date}}` variable is of `time.Time` type and can be used accordingly.
 
 ### Pages
 
 Pages are stored in the `.Pages` variable; it's a map where the keys are the "nesting levels" and the keys are references to the pages contained in them.
 
 For example, the following structure:
-```
+
+```sh
 ├── about.html
 ├── index.html
 ├── posts
@@ -178,7 +185,7 @@ For example, the following structure:
 
 will be represented in the `.Pages` variable as:
 
-```
+```json
 {
     "_": [                 // <- the root level
         {Title: "About", Path: "about.html"},
@@ -265,5 +272,5 @@ As written above, page titles are automatically generated from either the first 
 In addition, you can pass custom page attributes by setting the file's first line to a HTML comment like this:
 
 ```md
-<!-- {"Title": "my-custom-title", "Date": ""} -->
+<!-- {"Title": "my-custom-title", "Date": "2006-02-01"} -->
 ```
