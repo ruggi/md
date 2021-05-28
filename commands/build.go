@@ -62,15 +62,15 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 	return func() error {
 		log.Printf("Building %s", args.Directory)
 
-		err := runHooks(conf.Hooks.Build.Before)
+		start := time.Now()
+
+		// cleanup
+		err := os.RemoveAll(outDir)
 		if err != nil {
 			return err
 		}
 
-		start := time.Now()
-
-		// cleanup
-		err = os.RemoveAll(outDir)
+		err = runHooks(conf.Hooks.Build.Before)
 		if err != nil {
 			return err
 		}
