@@ -10,7 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/radovskyb/watcher"
+	"github.com/ruggi/md/config"
 	"github.com/ruggi/md/engine"
 	"github.com/ruggi/md/files"
 	"github.com/ruggi/md/settings"
@@ -40,6 +42,11 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 		return err
 	}
 
+	conf, err := config.Load(mdDir)
+	if err != nil {
+		return errors.Wrap(err, "cannot read config file")
+	}
+
 	if args.Watch {
 		log.Println("watching for changes")
 
@@ -58,6 +65,12 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 		err = w.Ignore(mdDir)
 		if err != nil {
 			return err
+		}
+		for _, f := range conf.NoWatch {
+			err = w.Ignore(f)
+			if err != nil {
+				return err
+			}
 		}
 		err = w.AddRecursive(args.Directory)
 		if err != nil {

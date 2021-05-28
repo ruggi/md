@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	"github.com/pkg/errors"
+	"github.com/ruggi/md/config"
 	"github.com/ruggi/md/engine"
 	"github.com/ruggi/md/files"
 	"github.com/ruggi/md/settings"
@@ -36,27 +38,34 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 	outDir := filepath.Join(mdDir, settings.OutDir)
 
 	// config setup
-	readConfig := func() (types.Config, error) {
-		var conf types.Config
-		f, err := os.Open(filepath.Join(mdDir, "config.json"))
-		if err != nil {
-			return types.Config{}, err
-		}
-		defer f.Close()
-		err = json.NewDecoder(f).Decode(&conf)
-		if err != nil {
-			return types.Config{}, errors.Wrap(err, "cannot parse config file")
-		}
-		return conf, nil
-	}
-	conf, err := readConfig()
+	conf, err := config.Load(mdDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot read config file")
 	}
 	engine.SetSyntaxHighlight(conf.SyntaxHighlight)
 
+	runHooks := func(hooks []string) error {
+		for i, h := range hooks {
+			log.Printf("%d/%d running before hook %q", i+1, len(conf.Hooks.Build.Before), h)
+			parts := strings.Fields(h)
+			cmd := exec.Command(parts[0], parts[1:]...)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
 	return func() error {
 		log.Printf("Building %s", args.Directory)
+
+		err := runHooks(conf.Hooks.Build.Before)
+		if err != nil {
+			return err
+		}
 
 		start := time.Now()
 
@@ -251,6 +260,11 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 		}
 
 		log.Printf("✔ Done (%s)", time.Since(start))
+
+		err = runHooks(conf.Hooks.Build.After)
+		if err != nil {
+			return err
+		}
 
 		return nil
 	}, nil
