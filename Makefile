@@ -1,3 +1,5 @@
+MAIN_BRANCH = main
+
 GOLANGCI_VERSION = 1.32.0
 GOLANGCI = .bin/golangci/$(GOLANGCI_VERSION)/golangci-lint
 
@@ -36,9 +38,13 @@ publish:
 	git push --follow-tags
 	git push origin v$($VERSION)
 
-publish-major: update-master
+update-main:
+	git checkout $(MAIN_BRANCH)
+	git pull
+
+publish-major: update-main
 	@make publish VERSION=$$(($(CURRENT_VERSION_MAJOR) + 1)).0.0
-publish-minor: update-master
+publish-minor: update-main
 	@make publish VERSION=$(CURRENT_VERSION_MAJOR).$$(($(CURRENT_VERSION_MINOR) + 1)).0
-publish-patch: update-master
+publish-patch: update-main
 	@make publish VERSION=$(CURRENT_VERSION_MAJOR).$(CURRENT_VERSION_MINOR).$$(($(CURRENT_VERSION_BUG) + 1))
