@@ -86,7 +86,7 @@ func Serve(args ServeArgs, engine engine.Engine) error {
 					log.Println(event.Op, event.Path)
 					err := builder()
 					if err != nil {
-						log.Fatalf("cannot build: %s", err)
+						log.Printf("! cannot build: %s", err)
 					}
 				case err := <-w.Error:
 					log.Fatalln(err)
