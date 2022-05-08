@@ -5,7 +5,7 @@ GOLANGCI = .bin/golangci/$(GOLANGCI_VERSION)/golangci-lint
 
 CURRENT_VERSION_MAJOR = 1
 CURRENT_VERSION_MINOR = 9
-CURRENT_VERSION_BUG = 0
+CURRENT_VERSION_BUG = 1
 
 $(GOLANGCI):
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(dir $(GOLANGCI)) v$(GOLANGCI_VERSION)
