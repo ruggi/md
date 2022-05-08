@@ -133,13 +133,34 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 
 		pages := map[string]types.Page{}
 		for _, p := range paths {
+			base := filepath.Base(p)
 			defaultTitle := strings.TrimSuffix(filepath.Base(p), filepath.Ext(p))
-			page := types.Page{
-				Title: defaultTitle,
-				Path:  p,
+
+			crumbs := strings.Split(p, "/")
+			breadcrumbs := make([]types.Breadcrumb, 0, len(crumbs))
+			if crumbs[len(crumbs)-1] != "index.md" {
+				for i, c := range crumbs[:len(crumbs)-1] {
+					path := "/" + strings.Join(crumbs[:i+1], "/")
+					if strings.HasSuffix(path, ".md") {
+						path = strings.TrimSuffix(path, ".md") + ".html"
+					}
+					breadcrumbs = append(breadcrumbs, types.Breadcrumb{
+						Path: path,
+						Base: c,
+					})
+				}
 			}
 
-			base := filepath.Base(p)
+			page := types.Page{
+				Title:       defaultTitle,
+				Path:        "/" + strings.TrimSuffix(p, filepath.Ext(p)) + ".html",
+				Breadcrumbs: breadcrumbs,
+				Parent:      filepath.Dir(filepath.Dir(p)),
+				Base:        base,
+				Dir:         filepath.Dir(p),
+				IsDir:       base == "index.md",
+			}
+
 			date, ok := files.TryParseDate(base)
 			if ok {
 				page.Date = date
@@ -196,7 +217,11 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 		if err != nil {
 			return err
 		}
-		layoutTpl, err := template.New("layout").Parse(string(layout))
+		layoutTpl, err := template.New("layout").Funcs(template.FuncMap{
+			"reverse": reverse,
+			"byDate":  byDate,
+			"byName":  byName,
+		}).Parse(string(layout))
 		if err != nil {
 			return err
 		}
@@ -224,6 +249,7 @@ func NewBuild(args BuildArgs, engine engine.Engine) (BuildCmd, error) {
 			fileTpl, err := template.New("file").Funcs(template.FuncMap{
 				"reverse": reverse,
 				"byDate":  byDate,
+				"byName":  byName,
 			}).Parse(string(src))
 			if err != nil {
 				return err
@@ -280,6 +306,15 @@ func reverse(pages []types.Page, things ...interface{}) []types.Page {
 
 func byDate(pages []types.Page, things ...interface{}) []types.Page {
 	res := make(types.PagesByDate, 0, len(pages))
+	for _, p := range pages {
+		res = append(res, p)
+	}
+	sort.Sort(res)
+	return res
+}
+
+func byName(pages []types.Page, things ...interface{}) []types.Page {
+	res := make(types.PagesByName, 0, len(pages))
 	for _, p := range pages {
 		res = append(res, p)
 	}
