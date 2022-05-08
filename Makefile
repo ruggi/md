@@ -36,7 +36,7 @@ publish:
 	git commit -am 'Bump version to v$(VERSION)'
 	git tag v$(VERSION)
 	git push --follow-tags
-	git push origin v$($VERSION)
+	git push origin v$(VERSION)
 
 update-main:
 	git checkout $(MAIN_BRANCH)
