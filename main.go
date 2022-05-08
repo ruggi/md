@@ -6,6 +6,7 @@ import (
 
 	"github.com/ruggi/md/commands"
 	"github.com/ruggi/md/engine/usegoldmark"
+	"github.com/ruggi/md/version"
 	"github.com/urfave/cli"
 )
 
@@ -20,6 +21,9 @@ var conf struct {
 
 func main() {
 	app := cli.NewApp()
+	app.Name = "md"
+	app.Usage = "A static site generator"
+	app.Version = version.Version
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
 			Name:        "d,directory",
